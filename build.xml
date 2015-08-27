@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="syamgot.task" basedir="." default="debug-build">
+
+	<property name="version" value="0.1.0" />
+	
+	<!-- flex sdks settings. -->
+	<property name="FLEX_HOME" value="/Users/syamgot/sdks/flex_sdk/4.6"/>
+	<property name="flex_ant" value="${FLEX_HOME}/ant/lib" />
+	<property name="flex_bin" value="${FLEX_HOME}/bin" />
+	
+	<!-- flex sdk tasks settings. -->
+	<taskdef resource="flexTasks.tasks" classpath="${flex_ant}/flexTasks.jar" />
+	<taskdef name="mxmlc" classname="flex.ant.MxmlcTask" classpath="${flex_ant}/flexTasks.jar" />
+	<taskdef name="compc" classname="flex.ant.CompcTask" classpath="${flex_ant}/flexTasks.jar" />
+	<taskdef name="asdoc" classname="flex.ant.AsDocTask" classpath="${flex_ant}/flexTasks.jar" />
+
+	<!-- compile settings. -->
+	<property name="filename" value="${ant.project.name}-${version}.swc" />
+	<property name="src_dir" value="${basedir}/src" />
+	<property name="bin_dir" value="${basedir}/bin" />
+	<property name="libs_dir" value="${basedir}/libs" />
+
+	<!-- ASDoc settings. -->
+	<property name="doc_dir" value="${basedir}/doc" />
+
+	<!-- UnitTest settings. -->	
+	<property name="test.basedir" value="${basedir}/as3unit" />
+	<property name="test.filename" value="Main.swf" />
+	<property name="test.src_dir" value="${test.basedir}/src" />
+	<property name="test.libs_dir" value="${test.basedir}/libs" />
+	<property name="test.bin_dir" value="${test.basedir}/bin-debug" />
+	<property name="test.generated_dir" value="${test.bin_dir}/genarated" />
+
+	<!-- target defines. -->	
+	<target name="debug-build" depends="tests.clean, compile, tests, wrapper, browse" />
+	
+	<!-- ASDoc -->
+    <target name="asdoc"> 
+    
+    	<!-- clean up -->
+        <delete includeEmptyDirs="true"> 
+            <fileset dir="${doc_dir}" includes="**/*"/> 
+        </delete> 
+    	
+        <asdoc output="${doc_dir}" lenient="true" failonerror="true" locale="ja_JP"> 
+            <compiler.source-path path-element="${src_dir}"/> 
+			<doc-sources path-element="${src_dir}"/>
+			<external-library-path dir="${libs_dir}">
+				<include name="**/*.swc" />
+			</external-library-path>
+        </asdoc> 
+    	
+    </target> 
+	
+	<!-- compile component -->
+	<target name="compile" depends="">
+		<compc output="${bin_dir}/${filename}">
+			<load-config filename="${FLEX_HOME}/frameworks/air-config.xml" />
+			<load-config filename="${FLEX_HOME}/frameworks/flex-config.xml" />
+			<source-path path-element="${src_dir}" />
+			<include-sources dir="${src_dir}" includes="*" />
+			<include-libraries file="${libs_dir}" />
+		</compc>
+	</target>
+	
+	<!-- testing with AS3Unit. -->
+	<target name="tests">
+		
+	    <mxmlc file="${test.src_dir}/Main.mxml" 
+        	output="${test.bin_dir}/${test.filename}" 
+	    	keep-generated-actionscript="false" 
+	    	actionscript-file-encoding="UTF-8"
+	    	debug="true" 
+	    	locale="ja_JP">
+	    	
+	    	<!-- include swc -->
+	    	<compiler.include-libraries dir="${basedir}/bin" append="true">
+	    	    <include name="${filename}" />
+	    	</compiler.include-libraries>
+	    	
+	    	<!-- include AS3Unit swcs. -->
+	    	<compiler.include-libraries dir="${test.libs_dir}" append="true">
+	    	    <include name="as3unit-1.2-async.swc" />
+	    	    <include name="as3unit-1.2-sdk3.swc" />
+	    	    <include name="as3unit-1.2.swc" />
+	    	</compiler.include-libraries>
+	    
+	    	<!-- load default compiler options. -->
+	        <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+	    	
+	    </mxmlc>
+	</target>
+
+	<!-- make html-wrapper -->
+	<target name="wrapper">
+	        <html-wrapper 
+	            title="${ant.project.name} Unit Test"
+	            file="index.html"
+	            width="800"
+	            height="600"
+	            bgcolor="white"
+	            application="app"
+	            swf="Main"
+	            version-major="9"
+	            version-minor="0"
+	            version-revision="0"
+	            history="true"
+	            output="${test.bin_dir}"/>
+	</target>
+	
+	<!-- clean up -->
+    <target name="tests.clean" depends="" description=""> 
+        <delete includeEmptyDirs="true"> 
+            <fileset dir="${test.bin_dir}" includes="**/*" />
+        </delete> 
+    </target> 
+
+	<!-- browse UnitTest result. -->
+	<target name="browse">
+		<exec executable="open">
+			<!--
+			<arg line="-a &quot;/Applications/Google Chrome.app&quot;  &quot;${test.bin_dir}/index.html&quot;  " />
+			-->
+			<arg line="-a Safari &quot;${test.bin_dir}/index.html&quot;" />	
+		</exec>
+	</target>	
+
+</project>
